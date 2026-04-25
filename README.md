@@ -81,12 +81,14 @@ src/imeanflow_robotics/
   model.py           # observation-conditioned Transformer with u/v heads
   policy.py          # iMeanFlow loss and few-step action sampling
   data.py            # synthetic robotic arm dataset
+  sim.py             # lightweight 2D planar-arm simulation
   train.py           # training entry point
   evaluate.py        # checkpoint evaluation
 
 scripts/
   train_synthetic.py
   rollout_demo.py
+  sim_demo.py
 
 docs/
   method.md
@@ -129,6 +131,27 @@ Run a minimal action queue demo:
 ```bash
 python scripts/rollout_demo.py
 ```
+
+Run the planar-arm simulation demo:
+
+```bash
+python scripts/sim_demo.py --train-steps 300
+```
+
+The demo trains a small no-CFG iMeanFlow policy on generated reaching
+demonstrations, rolls it out with receding-horizon action chunks, and writes:
+
+```text
+assets/planar_arm_demo.png
+assets/planar_arm_demo.gif
+```
+
+![Planar arm simulation](assets/planar_arm_demo.gif)
+
+The demo is a kinematic simulation, not a physics benchmark. Its purpose is to
+show the policy generating action chunks that move a simple robot arm toward a
+target. The default rollout uses 4 model evaluations per chunk and a fixed seed
+for reproducible visualization.
 
 ## Example Code
 

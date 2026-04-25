@@ -1,4 +1,4 @@
-.PHONY: install test train eval
+.PHONY: install test train eval sim
 
 install:
 	pip install -e ".[dev]"
@@ -12,3 +12,5 @@ train:
 eval:
 	python -m imeanflow_robotics.evaluate --checkpoint checkpoints/imeanflow_synthetic.pt
 
+sim:
+	python scripts/sim_demo.py --train-steps 300

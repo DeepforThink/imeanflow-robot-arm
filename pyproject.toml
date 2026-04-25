@@ -17,7 +17,8 @@ dependencies = [
   "torch>=2.1",
   "numpy>=1.24",
   "tqdm>=4.66",
-  "matplotlib>=3.7"
+  "matplotlib>=3.7",
+  "pillow>=10.0"
 ]
 
 [project.optional-dependencies]
@@ -32,4 +33,3 @@ where = ["src"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
-
