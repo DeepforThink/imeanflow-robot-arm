@@ -82,6 +82,7 @@ src/imeanflow_robotics/
   policy.py          # iMeanFlow loss and few-step action sampling
   data.py            # synthetic robotic arm dataset
   sim.py             # lightweight 2D planar-arm simulation
+  sim3d.py           # generated 3D reaching demonstrations
   train.py           # training entry point
   evaluate.py        # checkpoint evaluation
 
@@ -89,6 +90,7 @@ scripts/
   train_synthetic.py
   rollout_demo.py
   sim_demo.py
+  mujoco_3d_demo.py
 
 docs/
   method.md
@@ -154,6 +156,23 @@ target. The default rollout uses 4 model evaluations per chunk and a fixed seed
 for reproducible visualization. A small joint-step limiter is applied during
 rollout, matching the kind of low-level command smoothing used in real robot
 control loops.
+
+Run the 3D MuJoCo simulation demo:
+
+```bash
+pip install -e ".[mujoco]"
+python scripts/mujoco_3d_demo.py --train-steps 1200
+```
+
+This trains a small 3-DoF yaw/shoulder/elbow reaching policy, then runs it in
+MuJoCo with position actuators. The script writes:
+
+```text
+assets/mujoco_3d_demo.png
+assets/mujoco_3d_demo.gif
+```
+
+![MuJoCo 3D simulation](assets/mujoco_3d_demo.gif)
 
 ## Example Code
 

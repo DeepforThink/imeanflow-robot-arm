@@ -1,4 +1,4 @@
-.PHONY: install test train eval sim
+.PHONY: install test train eval sim mujoco3d
 
 install:
 	pip install -e ".[dev]"
@@ -14,3 +14,6 @@ eval:
 
 sim:
 	python scripts/sim_demo.py --train-steps 300
+
+mujoco3d:
+	python scripts/mujoco_3d_demo.py --train-steps 1200

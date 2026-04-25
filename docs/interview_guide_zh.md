@@ -28,7 +28,9 @@ loss = ||V - v_target||^2 + lambda_v ||v_head - v_target||^2
 
 ## 仿真 Demo
 
-项目里加入了一个轻量 2D 三关节平面机械臂环境：
+项目里有两层仿真：
+
+第一层是轻量 2D 三关节平面机械臂环境：
 
 - `PlanarArm2D` 提供正运动学和解析逆运动学目标；
 - `PlanarReachDataset` 自动生成 reaching demonstration；
@@ -41,14 +43,30 @@ loss = ||V - v_target||^2 + lambda_v ||v_head - v_target||^2
 python scripts/sim_demo.py --train-steps 300
 ```
 
-这个仿真不是物理引擎 benchmark，而是为了清楚展示：模型确实从观测和噪声生成动作 chunk，然后通过多轮重规划把机械臂末端推向目标。
+第二层是 3D MuJoCo 机械臂验证：
+
+- `SimpleArm3D` 和 `Reach3DDataset` 生成 yaw/shoulder/elbow 三自由度 reaching demonstrations；
+- `scripts/mujoco_3d_demo.py` 用同一个 iMeanFlow 策略生成关节目标 chunk；
+- MuJoCo 里用 position actuator 跟踪这些目标，验证动作 chunk 在动力学仿真里是否可执行；
+- 输出 `assets/mujoco_3d_demo.png` 和 `assets/mujoco_3d_demo.gif`。
+
+运行命令：
+
+```bash
+pip install -e ".[mujoco]"
+python scripts/mujoco_3d_demo.py --train-steps 1200
+```
+
+2D demo 是为了快速解释方法闭环，3D MuJoCo demo 更适合展示“生成的动作能否在仿真机械臂中被执行”。
 
 ## 可以展示的代码点
 
 - `src/imeanflow_robotics/policy.py`：iMeanFlow loss、JVP 目标、少步采样、动作队列。
 - `src/imeanflow_robotics/model.py`：observation-conditioned Transformer 和 `u/v` 双头。
 - `src/imeanflow_robotics/sim.py`：平面机械臂、自动生成 demonstrations、rollout。
+- `src/imeanflow_robotics/sim3d.py`：3D reaching 数据和解析 IK。
 - `scripts/sim_demo.py`：训练、加载 checkpoint、渲染 GIF/PNG。
+- `scripts/mujoco_3d_demo.py`：MuJoCo 3D 机械臂验证。
 - `tests/test_policy.py` 和 `tests/test_sim.py`：保证 loss、采样、仿真接口形状正确。
 
 ## 诚实边界
