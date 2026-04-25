@@ -1,0 +1,174 @@
+# iMeanFlow Robotics
+
+Improved Mean Flow policy for robotic arm action chunk generation.
+
+This repository implements a **no-CFG conditional iMeanFlow** model for generating
+future robot arm actions from observation vectors. It is designed as a compact,
+readable research project that connects three ideas:
+
+- flow matching for action generation,
+- Mean Flow / iMeanFlow for few-step generation,
+- action chunking for robotic imitation learning.
+
+The implementation is intentionally independent of any large robotics framework,
+so the method can be inspected, tested, and extended easily.
+
+## Why This Project
+
+Modern robot policies such as diffusion-style policies and pi0 generate an action
+chunk by transforming Gaussian noise into a smooth action trajectory. Standard
+Flow Matching learns an instantaneous velocity field and usually needs multiple
+Euler steps at inference time.
+
+iMeanFlow instead trains a model to support larger time jumps. The goal is:
+
+```text
+generate an action chunk with 1-2 model evaluations
+instead of a longer multi-step sampler
+```
+
+This can be useful for real-time robot control where inference latency matters.
+
+## Method Overview
+
+For a demonstrated action chunk `x` and Gaussian noise `e`:
+
+```text
+z_t = (1 - t) * x + t * e
+v_target = e - x
+```
+
+The model predicts:
+
+```text
+u(z_t, h, obs)      # interval-average velocity
+v_hat(z_t, h, obs)  # auxiliary instantaneous velocity
+h = t - r
+```
+
+The iMeanFlow training target is built with a Jacobian-vector product:
+
+```text
+v_tangent = v_hat(z_t, h=0, obs)
+dudt = JVP(u, direction=(v_tangent, dt=1, dr=0))
+V = u + (t - r) * stopgrad(dudt)
+loss = ||V - v_target||^2 + ||v_hat - v_target||^2
+```
+
+At inference time:
+
+```text
+z ~ N(0, I)
+for t -> r:
+    z = z - (t - r) * u(z, t-r, obs)
+```
+
+The default sampler uses two Euler steps.
+
+## Why No CFG
+
+Classifier-free guidance is important in many image-generation systems, but it
+requires an unconditional branch and condition dropout. Robot action generation is
+already strongly conditioned by robot state, task, and visual observations. A fake
+`omega` parameter without unconditional training would be misleading, so this
+project uses direct conditional generation only.
+
+## Repository Structure
+
+```text
+src/imeanflow_robotics/
+  config.py          # model and training configuration
+  model.py           # observation-conditioned Transformer with u/v heads
+  policy.py          # iMeanFlow loss and few-step action sampling
+  data.py            # synthetic robotic arm dataset
+  train.py           # training entry point
+  evaluate.py        # checkpoint evaluation
+
+scripts/
+  train_synthetic.py
+  rollout_demo.py
+
+docs/
+  method.md
+  interview_guide_zh.md
+
+tests/
+  test_policy.py
+```
+
+## Quick Start
+
+Install:
+
+```bash
+git clone https://github.com/DeepforThink/imeanflow-robot-arm.git
+cd imeanflow-robot-arm
+pip install -e ".[dev]"
+```
+
+Run tests:
+
+```bash
+pytest -q
+```
+
+Train on the synthetic arm dataset:
+
+```bash
+python scripts/train_synthetic.py --steps 800
+```
+
+Evaluate:
+
+```bash
+python -m imeanflow_robotics.evaluate --checkpoint checkpoints/imeanflow_synthetic.pt
+```
+
+Run a minimal action queue demo:
+
+```bash
+python scripts/rollout_demo.py
+```
+
+## Example Code
+
+```python
+import torch
+from imeanflow_robotics import IMeanFlowConfig, IMeanFlowPolicy
+
+config = IMeanFlowConfig(obs_dim=9, action_dim=6, horizon=16, n_action_steps=8)
+policy = IMeanFlowPolicy(config)
+
+obs = torch.randn(4, config.obs_dim)
+actions = torch.randn(4, config.horizon, config.action_dim)
+loss, metrics = policy.compute_loss(obs, actions)
+
+chunk = policy.sample_action_chunk(obs)
+single_action = policy.select_action(obs[0])
+```
+
+## What This Repository Is Honest About
+
+This is a compact research/engineering implementation, not an official iMeanFlow
+release and not a claim of state-of-the-art robot performance. The included
+synthetic dataset exists to verify the training loop and sampling API. For real
+robot use, replace `SyntheticArmDataset` with teleoperation or demonstration data
+from your robot.
+
+Recommended next experiments:
+
+- compare 2-step iMeanFlow with 10-step Flow Matching,
+- measure success rate and action smoothness on a real or simulated arm,
+- add image/state encoders for visual imitation learning,
+- benchmark control latency under different NFE values.
+
+## References
+
+- Lipman et al., Flow Matching for Generative Modeling.
+- Geng et al., Mean Flows for One-step Generative Modeling.
+- Geng et al., Improved Mean Flows: On the Challenges of Fastforward Generative Models.
+- pi0 / OpenPI style action flow matching for robot policies.
+
+## License
+
+MIT License.

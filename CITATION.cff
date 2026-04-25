@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+title: "iMeanFlow Robotics: Few-Step Action Chunk Generation for Robotic Arms"
+message: "If you use this repository, please cite it as a software project."
+type: software
+authors:
+  - family-names: Dong
+repository-code: "https://github.com/DeepforThink/imeanflow-robot-arm"
+abstract: "A compact no-CFG conditional iMeanFlow implementation for robotic arm action chunk generation."
+keywords:
+  - robotics
+  - imitation learning
+  - flow matching
+  - mean flow
+  - action generation
+license: MIT
