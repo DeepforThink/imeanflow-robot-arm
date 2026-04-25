@@ -33,6 +33,7 @@ def test_planar_rollout_shapes():
         target_xy=torch.tensor([0.6, 0.4]),
         control_cycles=2,
         execute_steps=2,
+        max_joint_step=0.2,
     )
 
     assert result.joints.shape == (5, 3)

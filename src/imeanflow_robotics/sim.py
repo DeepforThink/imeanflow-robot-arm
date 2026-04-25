@@ -142,6 +142,8 @@ def rollout_planar_policy(
     execute_steps: int = 4,
     num_inference_steps: int | None = None,
     num_candidates: int = 1,
+    tracking_gain: float = 0.70,
+    max_joint_step: float = 0.25,
 ) -> RolloutResult:
     """Run receding-horizon control with generated action chunks."""
     device = policy.device
@@ -160,7 +162,9 @@ def rollout_planar_policy(
         else:
             chunk = policy.sample_action_chunk(obs, num_steps=num_inference_steps)[0]
         for command in chunk[:execute_steps]:
-            joints = joints + 0.85 * (command - joints)
+            delta = tracking_gain * (command - joints)
+            delta = torch.clamp(delta, min=-max_joint_step, max=max_joint_step)
+            joints = joints + delta
             joints = torch.clamp(joints, -math.pi, math.pi)
             joint_history.append(joints.detach().cpu())
 

@@ -39,6 +39,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num-inference-steps", type=int, default=4)
     parser.add_argument("--num-candidates", type=int, default=1)
     parser.add_argument("--rollout-seed", type=int, default=7)
+    parser.add_argument("--control-cycles", type=int, default=12)
+    parser.add_argument("--tracking-gain", type=float, default=0.70)
+    parser.add_argument("--max-joint-step", type=float, default=0.25)
     return parser.parse_args()
 
 
@@ -174,10 +177,12 @@ def main() -> None:
         arm=arm,
         initial_joints=initial_joints,
         target_xy=target_xy,
-        control_cycles=12,
+        control_cycles=args.control_cycles,
         execute_steps=policy.config.n_action_steps,
         num_inference_steps=args.num_inference_steps,
         num_candidates=args.num_candidates,
+        tracking_gain=args.tracking_gain,
+        max_joint_step=args.max_joint_step,
     )
 
     png_path = args.output_dir / "planar_arm_demo.png"

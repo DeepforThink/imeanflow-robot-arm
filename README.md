@@ -151,7 +151,9 @@ assets/planar_arm_demo.gif
 The demo is a kinematic simulation, not a physics benchmark. Its purpose is to
 show the policy generating action chunks that move a simple robot arm toward a
 target. The default rollout uses 4 model evaluations per chunk and a fixed seed
-for reproducible visualization.
+for reproducible visualization. A small joint-step limiter is applied during
+rollout, matching the kind of low-level command smoothing used in real robot
+control loops.
 
 ## Example Code
 
