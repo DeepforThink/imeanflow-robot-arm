@@ -48,6 +48,7 @@ python scripts/sim_demo.py --train-steps 300
 - `SimpleArm3D` 和 `Reach3DDataset` 生成 yaw/shoulder/elbow 三自由度 reaching demonstrations；
 - `scripts/mujoco_3d_demo.py` 用同一个 iMeanFlow 策略生成关节目标 chunk；
 - MuJoCo 里用 position actuator 跟踪这些目标，验证动作 chunk 在动力学仿真里是否可执行；
+- 场景里把机械臂安装在一个小基座上，避免 demo 看起来像连杆贴在地面运动；
 - 输出 `assets/mujoco_3d_demo.png` 和 `assets/mujoco_3d_demo.gif`。
 
 运行命令：

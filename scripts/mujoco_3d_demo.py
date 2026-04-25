@@ -44,10 +44,21 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--num-layers", type=int, default=4)
     parser.add_argument("--num-heads", type=int, default=4)
     parser.add_argument("--num-inference-steps", type=int, default=4)
+    parser.add_argument("--num-candidates", type=int, default=1)
     parser.add_argument("--control-cycles", type=int, default=10)
     parser.add_argument("--execute-steps", type=int, default=12)
     parser.add_argument("--frameskip", type=int, default=16)
     parser.add_argument("--seed", type=int, default=21)
+    parser.add_argument("--mount-height", type=float, default=0.18)
+    parser.add_argument("--floor-height", type=float, default=-0.25)
+    parser.add_argument("--target-x", type=float, default=0.62)
+    parser.add_argument("--target-y", type=float, default=0.18)
+    parser.add_argument("--target-z", type=float, default=0.66)
+    parser.add_argument("--initial-yaw", type=float, default=-0.35)
+    parser.add_argument("--initial-shoulder", type=float, default=-0.30)
+    parser.add_argument("--initial-elbow", type=float, default=1.15)
+    parser.add_argument("--tracking-gain", type=float, default=1.0)
+    parser.add_argument("--max-joint-step", type=float, default=10.0)
     return parser.parse_args()
 
 
@@ -112,8 +123,10 @@ def train_or_load(args: argparse.Namespace, arm: SimpleArm3D) -> IMeanFlowPolicy
     return policy
 
 
-def make_mujoco_xml(target_xyz: np.ndarray) -> str:
+def make_mujoco_xml(target_xyz: np.ndarray, mount_height: float, floor_height: float) -> str:
     tx, ty, tz = target_xyz
+    pedestal_z = 0.5 * (mount_height + floor_height)
+    pedestal_half_height = 0.5 * (mount_height - floor_height)
     return textwrap.dedent(
         f"""
         <mujoco model="imeanflow_3d_arm">
@@ -126,9 +139,10 @@ def make_mujoco_xml(target_xyz: np.ndarray) -> str:
           <worldbody>
             <light pos="0 -2 3" dir="0 1 -1"/>
             <camera name="demo" pos="1.8 -2.4 1.6" xyaxes="0.82 0.57 0 -0.30 0.43 0.85"/>
-            <geom type="plane" size="2 2 0.02" rgba="0.92 0.92 0.88 1"/>
+            <geom type="plane" pos="0 0 {floor_height:.4f}" size="2 2 0.02" rgba="0.92 0.92 0.88 1"/>
+            <geom type="cylinder" pos="0 0 {pedestal_z:.4f}" size="0.075 {pedestal_half_height:.4f}" rgba="0.35 0.35 0.38 1"/>
             <site name="target" pos="{tx:.4f} {ty:.4f} {tz:.4f}" type="sphere" size="0.045" rgba="1 0.1 0.1 1"/>
-            <body name="base" pos="0 0 0.18">
+            <body name="base" pos="0 0 {mount_height:.4f}">
               <joint name="yaw" type="hinge" axis="0 0 1" damping="1.2" range="-3.14 3.14"/>
               <geom type="cylinder" size="0.08 0.08" rgba="0.2 0.2 0.25 1"/>
               <body name="upper" pos="0 0 0">
@@ -157,12 +171,18 @@ def run_mujoco_rollout(
     policy: IMeanFlowPolicy,
     arm: SimpleArm3D,
     args: argparse.Namespace,
-) -> tuple[np.ndarray, np.ndarray, float, list[np.ndarray]]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, float, list[np.ndarray]]:
     torch.manual_seed(args.seed)
-    target_xyz = torch.tensor([0.58, 0.32, 0.54], dtype=torch.float32)
-    initial_q = torch.tensor([-0.95, -0.45, 1.15], dtype=torch.float32)
+    policy_target_xyz = torch.tensor([args.target_x, args.target_y, args.target_z], dtype=torch.float32)
+    mount_offset = args.mount_height - arm.base_height
+    mujoco_target_xyz = policy_target_xyz + torch.tensor([0.0, 0.0, mount_offset], dtype=torch.float32)
+    initial_q = torch.tensor(
+        [args.initial_yaw, args.initial_shoulder, args.initial_elbow], dtype=torch.float32
+    )
 
-    model = mujoco.MjModel.from_xml_string(make_mujoco_xml(target_xyz.numpy()))
+    model = mujoco.MjModel.from_xml_string(
+        make_mujoco_xml(mujoco_target_xyz.numpy(), args.mount_height, args.floor_height)
+    )
     data = mujoco.MjData(model)
     data.qpos[:] = initial_q.numpy()
     data.ctrl[:] = initial_q.numpy()
@@ -179,11 +199,23 @@ def run_mujoco_rollout(
     policy.eval()
     for _ in range(args.control_cycles):
         q = torch.tensor(data.qpos[:3].copy(), dtype=torch.float32, device=policy.device)
-        obs = arm.observation(q, target_xyz.to(policy.device)).unsqueeze(0)
-        chunk = policy.sample_action_chunk(obs, num_steps=args.num_inference_steps)[0].cpu().numpy()
+        obs = arm.observation(q, policy_target_xyz.to(policy.device)).unsqueeze(0)
+        if args.num_candidates > 1:
+            obs_batch = obs.expand(args.num_candidates, -1)
+            candidates = policy.sample_action_chunk(obs_batch, num_steps=args.num_inference_steps)
+            candidate_ee = arm.forward_kinematics(candidates[:, -1])[:, -1]
+            distances = torch.linalg.norm(candidate_ee - policy_target_xyz.to(policy.device), dim=-1)
+            chunk = candidates[distances.argmin()].cpu().numpy()
+        else:
+            chunk = policy.sample_action_chunk(obs, num_steps=args.num_inference_steps)[0].cpu().numpy()
         for command in chunk[1 : args.execute_steps + 1]:
             command = np.clip(command, [-np.pi, -1.35, 0.02], [np.pi, 1.35, 2.55])
-            data.ctrl[:] = command
+            delta = np.clip(
+                args.tracking_gain * (command - data.ctrl[:]),
+                -args.max_joint_step,
+                args.max_joint_step,
+            )
+            data.ctrl[:] = data.ctrl[:] + delta
             for _ in range(args.frameskip):
                 mujoco.mj_step(model, data)
             q_history.append(data.qpos[:3].copy())
@@ -193,8 +225,8 @@ def run_mujoco_rollout(
 
     renderer.close()
     ee = np.asarray(ee_history)
-    final_distance = float(np.linalg.norm(ee[-1] - target_xyz.numpy()))
-    return np.asarray(q_history), ee, final_distance, frames
+    final_distance = float(np.linalg.norm(ee[-1] - mujoco_target_xyz.numpy()))
+    return np.asarray(q_history), ee, mujoco_target_xyz.numpy(), final_distance, frames
 
 
 def save_plot(ee: np.ndarray, target_xyz: np.ndarray, final_distance: float, path: Path) -> None:
@@ -228,8 +260,7 @@ def main() -> None:
     arm = SimpleArm3D()
     policy = train_or_load(args, arm)
 
-    _, ee, final_distance, frames = run_mujoco_rollout(policy, arm, args)
-    target_xyz = np.array([0.58, 0.32, 0.54], dtype=np.float32)
+    _, ee, target_xyz, final_distance, frames = run_mujoco_rollout(policy, arm, args)
     png_path = args.output_dir / "mujoco_3d_demo.png"
     gif_path = args.output_dir / "mujoco_3d_demo.gif"
     save_plot(ee, target_xyz, final_distance, png_path)

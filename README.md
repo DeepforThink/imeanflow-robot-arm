@@ -165,7 +165,9 @@ python scripts/mujoco_3d_demo.py --train-steps 1200
 ```
 
 This trains a small 3-DoF yaw/shoulder/elbow reaching policy, then runs it in
-MuJoCo with position actuators. The script writes:
+MuJoCo with position actuators. The arm is mounted on a small pedestal so the
+visualization looks like a table-mounted robot rather than a linkage lying on
+the floor. The script writes:
 
 ```text
 assets/mujoco_3d_demo.png
