@@ -13,6 +13,19 @@ readable research project that connects three ideas:
 The implementation is intentionally independent of any large robotics framework,
 so the method can be inspected, tested, and extended easily.
 
+## Current Baseline Result
+
+The companion FlowPolicy baseline replaces Diffusion Policy's denoising
+objective with a Flow Matching velocity objective while keeping the original
+low-dimensional Push-T data, rollout, and evaluation pipeline. A successful
+evaluation rollout is shown below:
+
+```text
+Flow Matching lowdim Push-T test mean score: 0.818 over 50 test seeds
+```
+
+![Flow Matching Push-T rollout](assets/flow_matching_pusht.gif)
+
 ## Why This Project
 
 Modern robot policies such as diffusion-style policies and pi0 generate an action
