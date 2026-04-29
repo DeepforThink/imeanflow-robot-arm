@@ -60,6 +60,13 @@ python scripts/mujoco_3d_demo.py --train-steps 1200
 
 2D demo 是为了快速解释方法闭环，3D MuJoCo demo 更适合展示“生成的动作能否在仿真机械臂中被执行”。
 
+第三层是正在扩展的 Push-Block 接触任务：
+
+- `scripts/mujoco_push_block_demo.py` 搭建桌面、方块、目标点和 scripted expert；
+- 运行后会保存 `push_block_scripted.gif/png` 和一个 `.npz` demonstration；
+- `scripts/mujoco_push_block_viewer.py` 可以打开 MuJoCo 交互窗口，用键盘移动末端目标，方便手动检查接触和调参；
+- 这是后续做 Push-T 或 Hugging Face 数据集前的第一阶段。
+
 ## 可以展示的代码点
 
 - `src/imeanflow_robotics/policy.py`：iMeanFlow loss、JVP 目标、少步采样、动作队列。
@@ -68,6 +75,8 @@ python scripts/mujoco_3d_demo.py --train-steps 1200
 - `src/imeanflow_robotics/sim3d.py`：3D reaching 数据和解析 IK。
 - `scripts/sim_demo.py`：训练、加载 checkpoint、渲染 GIF/PNG。
 - `scripts/mujoco_3d_demo.py`：MuJoCo 3D 机械臂验证。
+- `scripts/mujoco_push_block_demo.py`：接触任务数据采集原型。
+- `scripts/mujoco_push_block_viewer.py`：交互式 MuJoCo 调参界面。
 - `tests/test_policy.py` 和 `tests/test_sim.py`：保证 loss、采样、仿真接口形状正确。
 
 ## 诚实边界

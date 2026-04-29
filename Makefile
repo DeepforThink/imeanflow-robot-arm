@@ -1,4 +1,4 @@
-.PHONY: install test train eval sim mujoco3d
+.PHONY: install test train eval sim mujoco3d pushblock pushblock-viewer
 
 install:
 	pip install -e ".[dev]"
@@ -17,3 +17,9 @@ sim:
 
 mujoco3d:
 	python scripts/mujoco_3d_demo.py --train-steps 1200
+
+pushblock:
+	python scripts/mujoco_push_block_demo.py --save-data
+
+pushblock-viewer:
+	python scripts/mujoco_push_block_viewer.py

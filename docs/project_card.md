@@ -21,6 +21,7 @@ The repository demonstrates:
 - a synthetic robotic arm dataset for reproducible smoke tests.
 - a lightweight planar-arm simulation demo with PNG/GIF rollout artifacts.
 - an optional 3D MuJoCo reaching demo with a yaw/shoulder/elbow arm.
+- an early MuJoCo push-block environment with scripted demonstration capture.
 
 It does not claim:
 
@@ -61,3 +62,14 @@ python scripts/mujoco_3d_demo.py --train-steps 1200
 
 This runs the generated joint targets through MuJoCo position actuators and
 saves `assets/mujoco_3d_demo.png` and `assets/mujoco_3d_demo.gif`.
+
+For push-block data collection:
+
+```bash
+python scripts/mujoco_push_block_demo.py --save-data
+python scripts/mujoco_push_block_viewer.py
+```
+
+The scripted demo saves one `.npz` episode and visual artifacts. The viewer is
+intended for manually inspecting contact behavior before scaling up data
+collection.

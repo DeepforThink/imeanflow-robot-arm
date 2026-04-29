@@ -176,6 +176,19 @@ assets/mujoco_3d_demo.gif
 
 ![MuJoCo 3D simulation](assets/mujoco_3d_demo.gif)
 
+Run the early MuJoCo push-block environment:
+
+```bash
+python scripts/mujoco_push_block_demo.py --save-data
+python scripts/mujoco_push_block_viewer.py
+```
+
+The first command runs a scripted pushing episode, saves
+`assets/push_block_scripted.png`, `assets/push_block_scripted.gif`, and optionally
+`data/push_block_demo/episode_000.npz`. The second command opens an interactive
+MuJoCo viewer. Keyboard controls in the terminal move the end-effector target so
+the pushing setup can be inspected and tuned manually.
+
 ## Example Code
 
 ```python
