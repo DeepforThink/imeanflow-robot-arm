@@ -27,7 +27,8 @@ dev = [
   "ruff>=0.4"
 ]
 mujoco = [
-  "mujoco>=3.2"
+  "mujoco>=3.2",
+  "robot_descriptions>=1.23"
 ]
 
 [tool.setuptools.packages.find]

@@ -22,6 +22,7 @@ The repository demonstrates:
 - a lightweight planar-arm simulation demo with PNG/GIF rollout artifacts.
 - an optional 3D MuJoCo reaching demo with a yaw/shoulder/elbow arm.
 - an early MuJoCo push-block environment with scripted demonstration capture.
+- a Franka Panda MuJoCo viewer built from the official MuJoCo Menagerie assets.
 
 It does not claim:
 
@@ -73,3 +74,14 @@ python scripts/mujoco_push_block_viewer.py
 The scripted demo saves one `.npz` episode and visual artifacts. The viewer is
 intended for manually inspecting contact behavior before scaling up data
 collection.
+
+For a real robot-style push-block viewer:
+
+```bash
+python scripts/franka_push_block_viewer.py
+```
+
+This loads the Franka Panda model through `robot_descriptions`, adds a tabletop
+block-pushing scene, and controls the wrist target with damped least-squares IK.
+It should be used as the project baseline for future Panda/FR3 experiments
+instead of the hand-written 3-DoF prototype.

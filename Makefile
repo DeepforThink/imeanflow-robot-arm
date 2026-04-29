@@ -1,4 +1,4 @@
-.PHONY: install test train eval sim mujoco3d pushblock pushblock-viewer
+.PHONY: install test train eval sim mujoco3d pushblock pushblock-viewer franka-viewer
 
 install:
 	pip install -e ".[dev]"
@@ -23,3 +23,6 @@ pushblock:
 
 pushblock-viewer:
 	python scripts/mujoco_push_block_viewer.py
+
+franka-viewer:
+	python scripts/franka_push_block_viewer.py

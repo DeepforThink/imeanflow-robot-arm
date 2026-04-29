@@ -91,6 +91,7 @@ scripts/
   rollout_demo.py
   sim_demo.py
   mujoco_3d_demo.py
+  franka_push_block_viewer.py
 
 docs/
   method.md
@@ -188,6 +189,27 @@ The first command runs a scripted pushing episode, saves
 `data/push_block_demo/episode_000.npz`. The second command opens an interactive
 MuJoCo viewer. Keyboard controls in the terminal move the end-effector target so
 the pushing setup can be inspected and tuned manually.
+
+Run the Franka Panda push-block viewer:
+
+```bash
+python scripts/franka_push_block_viewer.py
+```
+
+This viewer loads the official MuJoCo Menagerie Franka Panda model through
+`robot_descriptions`, then adds a tabletop block-pushing scene. It is the better
+starting point for real robot-style experiments than the small hand-written
+3-DoF arm above: the Panda has the full 7-DoF kinematic chain, gripper geometry,
+joint limits, and collision meshes. Keyboard controls move a Cartesian wrist
+target with damped least-squares IK:
+
+```text
+W/S: move wrist target +Y / -Y
+A/D: move wrist target -X / +X
+Q/E: move wrist target +Z / -Z
+R: reset robot and block
+P: print current state
+```
 
 ## Example Code
 
