@@ -13,7 +13,27 @@ readable research project that connects three ideas:
 The implementation is intentionally independent of any large robotics framework,
 so the method can be inspected, tested, and extended easily.
 
-## Current Baseline Result
+## Current iMeanFlow Results
+
+The uploaded results are from the current **no-CFG iMeanFlow** training and
+evaluation run on low-dimensional Push-T.
+
+```text
+iMeanFlow lowdim Push-T test mean score: 0.614 over 50 test seeds
+iMeanFlow lowdim Push-T train mean score: 0.544 over 6 train seeds
+```
+
+![iMeanFlow Push-T evaluation rollout](assets/imeanflow_eval_rollout.gif)
+
+The full evaluation artifacts are included in the repository:
+
+- Evaluation log: [eval_outputs/eval_log.json](eval_outputs/eval_log.json)
+- Simulation rollout videos: [eval_outputs/media](eval_outputs/media)
+- Real-world / hardware video: [assets/shiji.mp4](assets/shiji.mp4)
+
+![iMeanFlow real-world video preview](assets/shiji_preview.gif)
+
+## Flow Matching Baseline Result
 
 The companion FlowPolicy baseline replaces Diffusion Policy's denoising
 objective with a Flow Matching velocity objective while keeping the original
@@ -25,20 +45,6 @@ Flow Matching lowdim Push-T test mean score: 0.818 over 50 test seeds
 ```
 
 ![Flow Matching Push-T rollout](assets/flow_matching_pusht.gif)
-
-## iMeanFlow Evaluation Outputs
-
-The current no-CFG iMeanFlow low-dimensional Push-T evaluation outputs are
-included in this repository:
-
-```text
-iMeanFlow lowdim Push-T test mean score: 0.614 over 50 test seeds
-iMeanFlow lowdim Push-T train mean score: 0.544 over 6 train seeds
-```
-
-- Evaluation log: [eval_outputs/eval_log.json](eval_outputs/eval_log.json)
-- Simulation rollout videos: [eval_outputs/media](eval_outputs/media)
-- Real-world / hardware video: [assets/shiji.mp4](assets/shiji.mp4)
 
 ## Why This Project
 
