@@ -26,6 +26,20 @@ Flow Matching lowdim Push-T test mean score: 0.818 over 50 test seeds
 
 ![Flow Matching Push-T rollout](assets/flow_matching_pusht.gif)
 
+## iMeanFlow Evaluation Outputs
+
+The current no-CFG iMeanFlow low-dimensional Push-T evaluation outputs are
+included in this repository:
+
+```text
+iMeanFlow lowdim Push-T test mean score: 0.614 over 50 test seeds
+iMeanFlow lowdim Push-T train mean score: 0.544 over 6 train seeds
+```
+
+- Evaluation log: [eval_outputs/eval_log.json](eval_outputs/eval_log.json)
+- Simulation rollout videos: [eval_outputs/media](eval_outputs/media)
+- Real-world / hardware video: [assets/shiji.mp4](assets/shiji.mp4)
+
 ## Why This Project
 
 Modern robot policies such as diffusion-style policies and pi0 generate an action
