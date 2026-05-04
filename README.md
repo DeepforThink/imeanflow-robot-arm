@@ -1,27 +1,78 @@
 # iMeanFlow Robotics
 
-Improved Mean Flow policy for robotic arm action chunk generation.
+iMeanFlow Robotics is a compact robot imitation-learning project for **few-step
+action chunk generation**. It implements a no-CFG conditional iMeanFlow policy
+and evaluates it on robotic arm reaching / pushing demos and low-dimensional
+Push-T rollouts.
 
-This repository implements a **no-CFG conditional iMeanFlow** model for generating
-future robot arm actions from observation vectors. It is designed as a compact,
-readable research project that connects three ideas:
+The project connects three ideas:
 
 - flow matching for action generation,
 - Mean Flow / iMeanFlow for few-step generation,
 - action chunking for robotic imitation learning.
 
-The implementation is intentionally independent of any large robotics framework,
-so the method can be inspected, tested, and extended easily.
+The core implementation is intentionally lightweight, while the Push-T result is
+evaluated with a Diffusion Policy-style low-dimensional benchmark pipeline.
+
+## Overview
+
+Diffusion-style robot policies generate an action chunk by iteratively
+transforming Gaussian noise into future actions. Flow Matching simplifies the
+training target into a velocity prediction problem, but still commonly uses a
+multi-step sampler.
+
+iMeanFlow trains the policy to support larger time jumps. The intended benefit is
+lower inference latency:
+
+```text
+generate an action chunk with 1-2 model evaluations
+instead of a longer multi-step sampler
+```
+
+This is useful for robot control loops where action generation must run
+repeatedly under a real-time budget.
+
+## Architecture
+
+```text
+Observation history / robot state
+        |
+        v
+Condition encoder
+        |
+        v
+Noisy action chunk z_t = (1 - t) * action + t * noise
+        |
+        v
+iMeanFlow policy network
+        |
+        +--> u(z_t, h, obs): interval-average velocity
+        |
+        +--> v_hat(z_t, h, obs): auxiliary instantaneous velocity
+        |
+        v
+Few-step sampler
+        |
+        v
+Future action chunk [a_t, ..., a_{t+k}]
+```
+
+## Policy Variants
+
+| Policy | Description | Status |
+| --- | --- | --- |
+| `imeanflow` | No-CFG conditional iMeanFlow with `u` / `v` heads and few-step sampling | implemented |
+| `flow_matching` | Conditional Flow Matching baseline in the companion FlowPolicy benchmark | evaluated |
+| `diffusion_policy` | Original denoising diffusion policy baseline used as the framework reference | reference only |
 
 ## Current iMeanFlow Results
 
 The uploaded results are from the current **no-CFG iMeanFlow** training and
 evaluation run on low-dimensional Push-T.
 
-```text
-iMeanFlow lowdim Push-T test mean score: 0.614 over 50 test seeds
-iMeanFlow lowdim Push-T train mean score: 0.544 over 6 train seeds
-```
+| Method | NFE | Test seeds | Test mean score | Train mean score |
+| --- | ---: | ---: | ---: | ---: |
+| iMeanFlow lowdim Push-T | 2 | 50 | 0.614 | 0.544 |
 
 ![iMeanFlow Push-T evaluation rollout](assets/imeanflow_eval_rollout.gif)
 
@@ -40,27 +91,11 @@ objective with a Flow Matching velocity objective while keeping the original
 low-dimensional Push-T data, rollout, and evaluation pipeline. A successful
 evaluation rollout is shown below:
 
-```text
-Flow Matching lowdim Push-T test mean score: 0.818 over 50 test seeds
-```
+| Method | Sampler | Test seeds | Test mean score |
+| --- | --- | ---: | ---: |
+| Flow Matching lowdim Push-T | multi-step Euler | 50 | 0.818 |
 
 ![Flow Matching Push-T rollout](assets/flow_matching_pusht.gif)
-
-## Why This Project
-
-Modern robot policies such as diffusion-style policies and pi0 generate an action
-chunk by transforming Gaussian noise into a smooth action trajectory. Standard
-Flow Matching learns an instantaneous velocity field and usually needs multiple
-Euler steps at inference time.
-
-iMeanFlow instead trains a model to support larger time jumps. The goal is:
-
-```text
-generate an action chunk with 1-2 model evaluations
-instead of a longer multi-step sampler
-```
-
-This can be useful for real-time robot control where inference latency matters.
 
 ## Method Overview
 
@@ -134,9 +169,9 @@ tests/
   test_policy.py
 ```
 
-## Quick Start
+## Installation
 
-Install:
+Clone the repository and install the development dependencies:
 
 ```bash
 git clone https://github.com/DeepforThink/imeanflow-robot-arm.git
@@ -144,31 +179,41 @@ cd imeanflow-robot-arm
 pip install -e ".[dev]"
 ```
 
-Run tests:
+For MuJoCo demos, install the optional MuJoCo dependencies:
+
+```bash
+pip install -e ".[mujoco]"
+```
+
+## Quick Start
+
+### 1. Run Unit Tests
 
 ```bash
 pytest -q
 ```
 
-Train on the synthetic arm dataset:
+### 2. Train the Lightweight iMeanFlow Policy
 
 ```bash
 python scripts/train_synthetic.py --steps 800
 ```
 
-Evaluate:
+### 3. Evaluate a Checkpoint
 
 ```bash
 python -m imeanflow_robotics.evaluate --checkpoint checkpoints/imeanflow_synthetic.pt
 ```
 
-Run a minimal action queue demo:
+### 4. Run a Minimal Action-Queue Demo
 
 ```bash
 python scripts/rollout_demo.py
 ```
 
-Run the planar-arm simulation demo:
+## Simulation Demos
+
+### Planar Arm
 
 ```bash
 python scripts/sim_demo.py --train-steps 300
@@ -191,10 +236,9 @@ for reproducible visualization. A small joint-step limiter is applied during
 rollout, matching the kind of low-level command smoothing used in real robot
 control loops.
 
-Run the 3D MuJoCo simulation demo:
+### 3D MuJoCo Reaching
 
 ```bash
-pip install -e ".[mujoco]"
 python scripts/mujoco_3d_demo.py --train-steps 1200
 ```
 
@@ -210,7 +254,7 @@ assets/mujoco_3d_demo.gif
 
 ![MuJoCo 3D simulation](assets/mujoco_3d_demo.gif)
 
-Run the early MuJoCo push-block environment:
+### MuJoCo Push-Block Prototype
 
 ```bash
 python scripts/mujoco_push_block_demo.py --save-data
@@ -223,7 +267,7 @@ The first command runs a scripted pushing episode, saves
 MuJoCo viewer. Keyboard controls in the terminal move the end-effector target so
 the pushing setup can be inspected and tuned manually.
 
-Run the Franka Panda push-block viewer:
+### Franka Panda Push-Block Viewer
 
 ```bash
 python scripts/franka_push_block_viewer.py
@@ -244,6 +288,26 @@ R: reset robot and block
 P: print current state
 ```
 
+## Usage
+
+### Common Parameters
+
+| Parameter | Example | Description |
+| --- | --- | --- |
+| `--steps` | `800` | Number of synthetic training steps |
+| `--train-steps` | `1200` | Number of demo-specific training steps |
+| `--checkpoint` | `checkpoints/imeanflow_synthetic.pt` | Checkpoint path for evaluation |
+| `--save-data` | enabled flag | Save a scripted MuJoCo episode for later inspection |
+
+### Recommended Workflow
+
+1. Run the unit tests to validate the local environment.
+2. Train the synthetic policy to verify the iMeanFlow loss and sampler.
+3. Run the planar and MuJoCo demos to inspect action smoothness visually.
+4. Use the FlowPolicy benchmark for quantitative Push-T comparison.
+5. Move from simulation to Franka / real-world data only after the benchmark
+   pipeline is reproducible.
+
 ## Example Code
 
 ```python
@@ -260,6 +324,22 @@ loss, metrics = policy.compute_loss(obs, actions)
 chunk = policy.sample_action_chunk(obs)
 single_action = policy.select_action(obs[0])
 ```
+
+## Real-Robot Notes
+
+The current real-world video is included as a qualitative demonstration, not as a
+claim of robust real-robot deployment. For a stronger real-robot experiment, the
+recommended progression is:
+
+1. Reproduce the Push-T benchmark evaluation with fixed seeds.
+2. Validate action normalization, action horizon, and control frequency in
+   simulation.
+3. Collect executed robot states and actions, not only commanded actions, so the
+   policy sees the behavior actually produced by the low-level controller.
+4. Keep the action interface continuous where possible. For binary gripper
+   commands, consider a separate head or post-processing rule.
+5. Compare iMeanFlow against Flow Matching under the same data, environment,
+   horizon, and evaluation seeds.
 
 ## What This Repository Is Honest About
 
@@ -282,6 +362,13 @@ Recommended next experiments:
 - Geng et al., Mean Flows for One-step Generative Modeling.
 - Geng et al., Improved Mean Flows: On the Challenges of Fastforward Generative Models.
 - pi0 / OpenPI style action flow matching for robot policies.
+
+## Acknowledgments
+
+The Push-T benchmark setup follows the style of Diffusion Policy low-dimensional
+evaluation. The README structure is influenced by recent robot-learning project
+repositories that present an overview, architecture, runnable scripts, evaluation
+artifacts, and real-robot notes in one place.
 
 ## License
 
