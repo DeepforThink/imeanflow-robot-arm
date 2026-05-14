@@ -50,10 +50,10 @@
   "test/sim_max_reward_100047": 0.9998220674836419,
   "test/sim_max_reward_100048": 0.962100951726744,
   "test/sim_max_reward_100049": 0.7472616956969576,
-  "test/sim_video_100000": "eval_outputs/media/5ww9qoek.mp4",
-  "test/sim_video_100001": "eval_outputs/media/p1ex31uy.mp4",
-  "test/sim_video_100002": "eval_outputs/media/5w3vf5ar.mp4",
-  "test/sim_video_100003": "eval_outputs/media/vewwzbpb.mp4",
+  "test/sim_video_100000": "data/eval_outputs/media/5ww9qoek.mp4",
+  "test/sim_video_100001": "data/eval_outputs/media/p1ex31uy.mp4",
+  "test/sim_video_100002": "data/eval_outputs/media/5w3vf5ar.mp4",
+  "test/sim_video_100003": "data/eval_outputs/media/vewwzbpb.mp4",
   "train/mean_score": 0.5442610172999572,
   "train/sim_max_reward_0": 0.9318009109482815,
   "train/sim_max_reward_1": 0.7686019798401365,
@@ -61,6 +61,6 @@
   "train/sim_max_reward_3": 0.7792648624755869,
   "train/sim_max_reward_4": 0.009503307570729362,
   "train/sim_max_reward_5": 0.5807717527556847,
-  "train/sim_video_0": "eval_outputs/media/ab2wgmy5.mp4",
-  "train/sim_video_1": "eval_outputs/media/ivqj6y1v.mp4"
+  "train/sim_video_0": "data/eval_outputs/media/ab2wgmy5.mp4",
+  "train/sim_video_1": "data/eval_outputs/media/ivqj6y1v.mp4"
 }
