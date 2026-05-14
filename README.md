@@ -164,6 +164,8 @@ scripts/
 docs/
   method.md
   interview_guide_zh.md
+  algorithm_notes_zh.md
+  current_limitations_zh.md
 
 tests/
   test_policy.py
@@ -307,6 +309,18 @@ P: print current state
 4. Use the FlowPolicy benchmark for quantitative Push-T comparison.
 5. Move from simulation to Franka / real-world data only after the benchmark
    pipeline is reproducible.
+
+## Interview / Defense Notes
+
+For a Chinese project interview or research discussion, start with:
+
+- [docs/interview_guide_zh.md](docs/interview_guide_zh.md)
+- [docs/algorithm_notes_zh.md](docs/algorithm_notes_zh.md)
+- [docs/current_limitations_zh.md](docs/current_limitations_zh.md)
+
+These notes explain the project scope, Flow Matching / Mean Flow / iMeanFlow
+principles, code paths, current weaknesses, and the next experiments that should
+be run before making stronger claims.
 
 ## Example Code
 
